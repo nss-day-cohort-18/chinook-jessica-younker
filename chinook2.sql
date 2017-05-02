@@ -120,7 +120,7 @@ GROUP BY c.country
 ORDER BY TotalSales DESC LIMIT 1;
 
 top_2013_track.sql: Provide a query that shows the most purchased track of 2013.
-SELECT t.name, t.trackid, Count(*) AS TimesPurchasedIn2013
+SELECT t.name, t.trackid, Count(t.trackid) AS TimesPurchasedIn2013
 FROM InvoiceLine l
 LEFT JOIN Track t ON t.trackid=l.trackid
 LEFT JOIN Invoice i ON l.invoiceid=i.invoiceid
@@ -153,3 +153,21 @@ LEFT JOIN Track t ON m.mediatypeid=t.mediatypeid
 LEFT JOIN InvoiceLine l ON t.trackid=l.trackid
 GROUP BY m.name
 ORDER BY TimesPurchased DESC LIMIT 5;
+
+-- ADAM's #24:
+select aggregateData.Name, aggregateData.Number
+from        (   select Track.Name as Name, count(Track.Name) as Number
+                    from Track
+                    left join InvoiceLine
+                    on Track.TrackId = InvoiceLine.TrackId
+                    left join Invoice
+                    on Invoice.InvoiceId = InvoiceLine.InvoiceId
+                    where Invoice.InvoiceDate between '2013-01-01' and '2013-12-31'
+                    group by Track.Name
+                    order by count(Track.Name) desc ) as aggregateData,
+                (   select count(InvoiceLine.TrackId) as Quantity
+                    from InvoiceLine
+                    group by InvoiceLine.TrackId
+                    order by Quantity desc
+                    limit 1     ) as Compare
+where aggregateData.Number = Compare.Quantity
